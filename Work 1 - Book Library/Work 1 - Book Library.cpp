@@ -1,5 +1,6 @@
 #include <iostream>
-#include <sstream>
+#include <sstream> //for converting string to int, or attempting to do so
+#include <iomanip> //to use setprecision()
 using namespace std;
 
 struct library {
@@ -18,12 +19,13 @@ void listBooks(library* l) {
     library* p = l;
 
     while (p != NULL) {
-        cout << p->code << "\t" << p->title << "\n";
-        cout << "\t" << p->author << "\n";
-        cout << "\t" << p->style << "\n";
-        cout.precision(4); // set output for float to 2 floating numbers
-        cout << "\t" << p->quantity << ": " << p->price << "€" << "\n";
-        cout << endl;
+        //cout << "Debug: p address: " << p << ", p->title: " << p->title << ", p->code: " << p->code << endl;
+
+        cout << p->code << "\t" << p->title << "\n"
+                << "\t" << p->author << "\n"
+                << "\t" << p->style << "\n"
+                << "\t" << p->quantity << ": " << fixed << setprecision(2) << p->price << "€\n" // fixed and setprecision() to format floating-point in p->price
+                << endl;
         p = p->next;
     }
 }
@@ -91,11 +93,43 @@ library* insertBook(library* l) {
     return l; // returns list
 }
 
-/*library* removeBook(library* l) {
+library* removeBook(library* l) {
+    library* p = l, * prev = NULL;
+    char search[50];
+    cin.ignore();
+    cout << "What book you want to remove from library? ";
+    cin.getline(search, sizeof(search));
+    while (p != NULL){
+        if (strcmp(p->title, search) == 0) {
+            if (prev != NULL) {
+                //cout << "Debug: Before removal - p address: " << p << ", p->title: " << p->title << ", p->code: " << p->code << endl;
 
-}*/
+                prev->next = p->next;
+                cout << search << " has been successfully removed from the library." << endl;
+                delete p;
+                //cout << "Debug: After removal - p address: " << p << ", prev->next: " << (prev != NULL ? prev->next : nullptr) << endl;
 
-bool searchBook(library* l) {
+                return l;
+            }
+            else {
+                //cout << "Debug: Before removal - p address: " << p << ", p->title: " << p->title << ", p->code: " << p->code << endl;
+
+                l = p->next;
+                cout << search << " has been successfully removed from the library." << endl;
+                delete p;
+                //cout << "Debug: After removal - p address: " << p << ", prev->next: " << (prev != NULL ? prev->next : nullptr) << endl;
+
+                return l;
+            }
+        }
+        prev = p;
+        p = p->next;
+    }
+    cout << search << " has been not found in the library." << endl;
+    return l;
+}
+
+void searchBook(library* l) {
     library* p = l;
     char title_search[50]{};
     cout << "What title do you search for? ";
@@ -104,21 +138,36 @@ bool searchBook(library* l) {
     while (p != NULL)
     {
         if (strcmp(p->title, title_search) == 0) {
-            return true;
+            cout << title_search << " has been found.\n"
+                << p->code << "\t" << p->title << "\n"
+                << "\t" << p->author << "\n"
+                << "\t" << p->style << "\n"
+                << "\t" << p->quantity << ": " << fixed << setprecision(2) << p->price << "€\n" // fixed and setprecision() to format floating-point in p->price
+                << endl;
+            return;
         }
         p = p->next;
     }
-    return false;
+    cout << title_search << " has been not found in the library." << endl;
+    return;
 }
 
-int countBooks(library* l) {
+void countBooks(library* l) {
     library* p = l;
-    int count = 0;
+    int countTitles = 0, countQuantity = 0;
     while (p != NULL) {
-        count++;
+        countTitles++;
+        countQuantity += p->quantity;
         p = p->next;
     }
-    return count;
+    if (countQuantity > 0) {
+        cout << "There " << (countTitles == 1 ? "is" : "are") << " " << countTitles << " distinct title" << (countTitles == 1 ? "" : "s") // using ternary operators (condition ? true_value : false_value) to make single/plural handling shorter and easier
+            << " and " << countQuantity << " book" << (countQuantity == 1 ? "" : "s") << " in the library." << endl;
+    }
+    else {
+        cout << "Library is empty." << endl;
+    }
+    return;
 }
 
 int main()
@@ -129,6 +178,7 @@ int main()
     do {
         cout << "Which of the actions: insert, list, remove, find, count and dismiss, do you wish to perform?" << endl;
         cin >> answer;
+        cout << endl;
         switch (tolower(answer[0])) //take in only one first letter of user's input as an indicator of needed command to allow us use a more comfortable switch-case system
         {
         case ('i'): // Insert command case
@@ -138,30 +188,25 @@ int main()
             listBooks(bookList);
             break;
         case ('r'): // Remove command case
-            cout << "Removed" << endl;
+            bookList = removeBook(bookList);
             break;
         case ('f'): // Find command case
-            if (searchBook(bookList)) {
-                cout << "Book found." << endl;
-            }
-            else {
-                cout << "Book not found." << endl;
-            }
+            searchBook(bookList);
             break;
         case ('c'): // Count command case
-            if (countBooks(bookList) != 0 and countBooks(bookList) != 1) {
-                cout << "There's " << countBooks(bookList) << " books in the library." << endl;
-            }
-            else if (countBooks(bookList) == 1) {
-                cout << "There's " << countBooks(bookList) << " book in the library." << endl;
-            }
-            else {
-                cout << "Library is empty." << endl;
-            }
+            countBooks(bookList);
+            break;
+        case ('d'):
             break;
         default: // Error case if user entered invalid command
             cout << "Unvalid option. Retry." << endl;
             continue;
         }
     } while (tolower(answer[0]) != 'd'); // Dissmissing a programm if user gave such command
+    // Cleaning up the memory
+    while (bookList != nullptr) {
+        library* temp = bookList;
+        bookList = bookList->next;
+        delete temp;
+    }
 }
