@@ -10,6 +10,9 @@ struct library {
     library* next;
 };
 
+int nextBookID = 0, removedID = 0;
+
+
 void listBooks(library* l) {
     if (l == NULL) {
         cout << "Library is empty." << endl;
@@ -19,7 +22,6 @@ void listBooks(library* l) {
     library* p = l;
 
     while (p != NULL) {
-        //cout << "Debug: p address: " << p << ", p->title: " << p->title << ", p->code: " << p->code << endl;
 
         cout << p->code << "\t" << p->title << "\n"
                 << "\t" << p->author << "\n"
@@ -45,29 +47,25 @@ library* insertBook(library* l) {
     cout << "\nWhat style is it written in? ";
     cin.getline(p->style, sizeof(p->style));
 
+    if (removedID == 0 or removedID == nextBookID) {
+        nextBookID++;
+        p->code = nextBookID;
+        removedID = 0;
+    }
+    else if(removedID < nextBookID){
+        p->code = removedID;
+        removedID = 0;
+    }
+
     do // do-while loop to give user infinite amount of attempts just to make sure that it gets int value in the end
-    {
-        string temp;
-        cout << "\nWhat's the ID for this book? ";
-        cin >> temp;
-        istringstream iss(temp); // inserted by <sstream>, attempts to convert into int
-
-        if (iss >> p->code) { // if convertion  succeeded, eventually applies converted value into p->code and breaks the loop
-            p->code = stoi(temp); //stoi = string to int
-            break;
-        }
-        else { cout << "Invalid input. Please enter a valid integer.\n"; }
-    } while (true);
-
-    do // same here
     {
         string temp;
         cout << "\nHow much books do you want to insert? ";
         cin >> temp;
-        istringstream iss(temp);
+        istringstream iss(temp); // inserted by <sstream>, attempts to convert into int
 
-        if (iss >> p->quantity) {
-            p->quantity = stoi(temp);
+        if (iss >> p->quantity) {  // if convertion  succeeded, eventually applies converted value into p->code and breaks the loop
+            p->quantity = stoi(temp); //stoi = string to int
             break;
         }
         else { cout << "Invalid input. Please enter a valid integer.\n"; }
@@ -101,23 +99,20 @@ library* removeBook(library* l) {
     cin.getline(search, sizeof(search));
     while (p != NULL){
         if (strcmp(p->title, search) == 0) {
+            removedID = p->code;
             if (prev != NULL) {
-                //cout << "Debug: Before removal - p address: " << p << ", p->title: " << p->title << ", p->code: " << p->code << endl;
 
                 prev->next = p->next;
                 cout << search << " has been successfully removed from the library." << endl;
                 delete p;
-                //cout << "Debug: After removal - p address: " << p << ", prev->next: " << (prev != NULL ? prev->next : nullptr) << endl;
 
                 return l;
             }
             else {
-                //cout << "Debug: Before removal - p address: " << p << ", p->title: " << p->title << ", p->code: " << p->code << endl;
 
                 l = p->next;
                 cout << search << " has been successfully removed from the library." << endl;
                 delete p;
-                //cout << "Debug: After removal - p address: " << p << ", prev->next: " << (prev != NULL ? prev->next : nullptr) << endl;
 
                 return l;
             }
